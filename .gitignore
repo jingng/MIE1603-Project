@@ -1,0 +1,11 @@
+# Ignore Conda environment files
+*.conda
+*.ipynb_checkpoints
+
+# Ignore Jupyter runtime files
+.jupyter
+__pycache__/
+*.pyc
+
+# Ignore cache
+cache
