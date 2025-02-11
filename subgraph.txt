@@ -1,0 +1,78 @@
+performing matching
+Node 149976537 not reachable from 1263051421
+Node 1367382384 not reachable from 1263051421
+Node 149976537 not reachable from 1263051421
+Node 1367382384 not reachable from 1263051421
+Node 524335287 not reachable from 1263051421
+Node 524335287 not reachable from 824739381
+Node 726606182 not reachable from 143154981
+Node 726606182 not reachable from 1263051421
+Node 1123060251 not reachable from 1585494366
+math domain error
+Node 1421931211 not reachable from 850246474
+math domain error
+math domain error
+Node 2104908669 not reachable from 1837743415
+Node 611592491 not reachable from 1837743415
+math domain error
+math domain error
+math domain error
+Node 611592491 not reachable from 683065247
+Node 611592491 not reachable from 683065247
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+math domain error
+Node 611592491 not reachable from 509060282
+Node 1989712752 not reachable from 509060282
+math domain error
+math domain error
+Node 611592491 not reachable from 942384409
+Node 1989712752 not reachable from 942384409
+math domain error
+math domain error
+math domain error
+Node 1871187925 not reachable from 567067019
+Node 611592491 not reachable from 567067019
+math domain error
+math domain error
+math domain error
+Node 1871187925 not reachable from 509060282
+Node 611592491 not reachable from 509060282
+math domain error
+math domain error
+Node 1871187925 not reachable from 625066133
+Node 611592491 not reachable from 625066133
+math domain error
+math domain error
+Node 1871187925 not reachable from 509060282
+Node 611592491 not reachable from 509060282
+Node 611592491 not reachable from 625066133
+Node 507455743 not reachable from 625066133
