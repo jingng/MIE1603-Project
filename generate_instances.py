@@ -6,7 +6,7 @@ import networkx as nx
 
 nodes_lst = [i for i in range(10)]
 
-# (node i, node j, distance)
+# (node i, node j, {"length": 5})
 h_edge_lst = [
             (1,2),
             (1,3),
@@ -30,8 +30,8 @@ g_edge_lst = [
             (2,4),
             (4,6),
             (4,7),
-            (5,9),
-            (6,9),
+            (5,9,),
+            (6,9,),
             (1,7),
             (8,10)]
 
@@ -39,6 +39,11 @@ g_edge_lst = [
 H = nx.DiGraph()
 H.add_nodes_from(nodes_lst)
 H.add_edges_from(h_edge_lst)
+for edge in H.edges:
+    H.edges[edge]['length']=5
+
+# list(H.edges(data=True))
+# H.edges[1,2]['distance']
 
 # Define G (citystrides)
 G = nx.DiGraph()
@@ -73,9 +78,9 @@ for edge in R.edges:
 
 # 5. Ran 1->7->8->10
 r1_edge_lst = [
-    (1,7),
-    (7,8),
-    (8,10)
+    (1,7,{"distance": 5}),
+    (7,8,{"distance": 5}),
+    (8,10,{"distance": 5})
 ]
 
 R = nx.DiGraph()
