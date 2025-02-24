@@ -6,6 +6,7 @@ import geopandas as gpd
 from osmnx import utils_geo as ug
 from sklearn.neighbors import BallTree
 from shapely import MultiPoint, transform, extract_unique_points, plotting
+import matplotlib as plt
 
 from runtrack.graph import distance, utils
 
@@ -90,7 +91,7 @@ def prep_candidates(G,interp_dist=10):
 
     return index,nodes,nodes_deg,rtree,coords,ball
 
-def get_candidates(G,index,nodes,nodes_deg,rtree,coords,ball, points, closest=True, radius=10):
+def get_candidates(G,index,nodes,nodes_deg,rtree,coords,ball, points, closest=True, radius=10,plot=True):
     """ Extract candidate points for Hidden-Markov Model map-matching approach.
 
     Parameters
@@ -162,13 +163,17 @@ def get_candidates(G,index,nodes,nodes_deg,rtree,coords,ball, points, closest=Tr
 
     dist = max(max(results.values(), key=lambda point: max(point['dists']))['dists'])
     polygon = extract_unique_points(MultiPoint([latlng for point in results.values() for latlng in point['candidates']]))
-    # plotting.plot_points(polygon,ax=ax,color='red')
 
     poly_buff = polygon.convex_hull.buffer(np.rad2deg(max(1000,dist*10)/distance.EARTH_RADIUS_M),cap_style=3)
-    # plotting.plot_polygon(polygon.convex_hull,ax=ax,color='green',alpha=0.7)
-    # plotting.plot_line(poly_buff.boundary,ax=ax,color='blue',alpha=0.5)
-    # plotting.plot_polygon(MultiPoint(nodes_deg.array).convex_hull,ax=ax,color='yellow',alpha=0.3)
-    # plt.show()
+    
+    if plot == True:
+        fig,ax = plt.subplots()
+        plotting.plot_points(polygon,ax=ax,color='red')
+        plotting.plot_polygon(polygon.convex_hull,ax=ax,add_points=False,color='green',alpha=0.7)
+        plotting.plot_line(poly_buff.boundary,ax=ax,add_points=False,color='blue',alpha=0.5)
+        plotting.plot_polygon(MultiPoint(nodes_deg.array).convex_hull,add_point=False,ax=ax,color='yellow',alpha=0.3)
+        plt.show()
+    
     if poly_buff.is_valid and poly_buff.area > 0:
         possible_matches_iloc = rtree.query(poly_buff,predicate='intersects')
         possible_matches = nodes_deg.iloc[list(possible_matches_iloc)]
