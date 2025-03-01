@@ -1,11 +1,14 @@
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
+import matplotlib.pyplot as plt
 
-total_length = 45
+import generate_instances
+
+total_length = 60
 
 n_nodes = 9
-nodes_lst = [i for i in range(1, n_nodes+1)]
+nodes = [i for i in range(1, n_nodes+1)]
 
 # h_edge_lst = [(i,j) for i in nodes_lst for j in nodes_lst if j!=i] # all connected
 
@@ -32,26 +35,54 @@ h_edge_lst = [
 h_edge_lst = h_edge_lst + [tuple(reversed(edge)) for edge in h_edge_lst] # adding reversed direction of edges
 
 # Dictionary of connected nodes
-node_dict = {i:{j for _, j in h_edge_lst if _ == i } for i in nodes_lst}
+node_dict = {i:{j for _, j in h_edge_lst if _ == i } for i in nodes}
 
+# Random
 g_edge_lst = [
             (1,2),
+            (1,7),
+            (2,3),
+            (3,2),
             (3,4),
             (4,5),
-            (5,4),
-            (6,1),
-            (1,7),
-            (7,1),
+            (4,8),
             (5,9),
-            (9,5),
-            (5,7),
+            (6,1),
+            (6,5),
+            (7,6),
+            (7,8),
             (7,9), 
-            (8,7)
+            (8,7),
+            (8,2),
+            (8,3),
+            (9,7)
+            ]
+
+# Force subtours
+g_edge_lst = [
+            (1,2),
+            (1,6),
+            (2,1),
+            (2,3),
+            (3,2),
+            (3,4),
+            (4,3),
+            (4,5),
+            (5,4),
+            (5,6),
+            (6,5),
+            (6,1),
+            (7,8),
+            (7,9),
+            (8,7),
+            (8,9),
+            (9,7),
+            (9,8)
             ]
 
 # Define H (runnable paths)
 H = nx.DiGraph()
-H.add_nodes_from(nodes_lst)
+H.add_nodes_from(nodes)
 H.add_edges_from(h_edge_lst)
 for edge in H.edges:
     H.edges[edge]['length']=5
@@ -61,30 +92,37 @@ for edge in H.edges:
 
 # Define G (citystrides)
 G = nx.DiGraph()
-G.add_nodes_from(nodes_lst)
+G.add_nodes_from(nodes)
 G.add_edges_from(g_edge_lst)
 
 # 1. All roads have been ran, R = H
-R = nx.DiGraph(H)
+# R = nx.DiGraph(H)
 
-# Add passes
+# # Add passes
+# for edge in R.edges:
+#     R.edges[edge]['visited']=1
+
+# 3. Only H/G ran, R = H/G
+R = nx.DiGraph(H)
 for edge in R.edges:
-    R.edges[edge]['visited']=1
+   if edge in G.edges:
+      R.edges[edge]["visited"]=0
+   else:
+      R.edges[edge]["visited"]=1
 
 # Define model
 m = gp.Model("mp")
 
 edges, lengths = gp.multidict({edge:H.edges[edge]['length'] for edge in H.edges })
-profit = {edge: (10 if edge in G.edges and R.edges[edge]['visited']==0 else 1) for edge in H.edges}
-penalty = {edge: (5 if edge in R.edges else 1) for edge in H.edges}
+profit = {edge: (50 if edge in G.edges and R.edges[edge]['visited']==0 else 0) for edge in H.edges}
+penalty = {edge: (20 if edge in R.edges else 0) for edge in H.edges}
 
 x = m.addVars(edges, name="traversed", vtype=GRB.INTEGER) # number of times arc (i,j) is traversed
 # x.update({(j,i):x[i,j] for i,j in edges}) 
 
 y = m.addVars(edges, name="run", vtype=GRB.BINARY) # arc (i,j) is chosen to be ran, {0,1}
-# y.update({(j,i):y[i,j] for i,j in edges})
 
-z = m.addVars({(i,j) for i in nodes_lst for j in nodes_lst if i<j}, name='profitable_route', vtype=GRB.BINARY)
+z = m.addVars({(i,j) for i in nodes for j in nodes if i<j}, name='profitable_route', vtype=GRB.BINARY)
 
 ## Constraints
 
@@ -92,8 +130,8 @@ z = m.addVars({(i,j) for i in nodes_lst for j in nodes_lst if i<j}, name='profit
 symm = m.addConstrs((x.sum(i,'*') == x.sum('*', i) for i in node_dict), name = 'symmetry')
 
 # Connectivity Constraint
-conn1_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes_lst for j in nodes_lst if i!=j and j in node_dict[i]))
-conn2_const = m.addConstrs((y[i,j]*10 >= x[i,j] for i in nodes_lst for j in nodes_lst if i!=j and j in node_dict[i]))
+conn1_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
+conn2_const = m.addConstrs((y[i,j]*10 >= x[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
 
 # Total Length Constraint
 total_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_length')
@@ -103,9 +141,9 @@ start_node = m.addConstrs((y.sum(1, j)>=1 for j in node_dict[1]), name='start_no
 
 # Set which routes are profitable
 
-profit_1 = m.addConstrs((z[i,j] >= y[i,j] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
-profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
-profit_3 = m.addConstrs((y[i,j] + y[j,i] >= z[i,j] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
+profit_1 = m.addConstrs((z[i,j] >= y[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
+profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes for j in nodes if i<=j and (i,j) in edges))
+profit_3 = m.addConstrs((y[i,j] + y[j,i] >= z[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
 
 m.setObjective(z.prod(profit)-x.prod(penalty), GRB.MAXIMIZE)
 
@@ -115,25 +153,9 @@ def subtourelim(model, where):
       solution_x = model.cbGetSolution(model._x)
       solution_y = model.cbGetSolution(model._y)
 
-    #   ## Reverse Arc Constraint
-    #   for i in range(1, model._N):
-    #     for j in range(1, model._N):
-
-    #       if (i,j) in model._edges and (j,i) in model._edges:
-    #         if i!=j and solution_y[(i,j)] > 0.05 and solution_y[(j,i)] > 0.05 :
-    #           model.cbLazy(model._y[(i,j)] + model._y[(j,i)] <= 1)
-
-    #   Testing on one set of edges
-    #   if solution_x[(1,7)] > 0.05 and solution_x[(7,1)] > 0.05 :
-    #       model.cbLazy(model._y[(1,7)] + model._y[(7,1)] <= 1)
-    #   if solution_x[(5,9)] > 0.05 and solution_x[(9,5)] > 0.05 :
-    #       model.cbLazy(model._y[(5,9)] + model._y[(9,5)] <= 1)
-    #   if solution_x[(1,2)] > 0.05 and solution_x[(1,2)] > 0.05 :
-    #       model.cbLazy(model._y[(1,2)] + model._y[(2,1)] <= 1)
-
     ## Subtour elimination
     # Identify visited nodes
-      visited_edges = [edge for edge in model._edges if solution_x[edge]>0.05]
+      visited_edges = [edge for edge in model._edges if solution_y[edge]>0.05]
       visited_nodes = set()
       for edge in visited_edges:
         i,j = edge
@@ -144,7 +166,7 @@ def subtourelim(model, where):
       for i in visited_nodes:
          for j in visited_nodes:
             if (i,j) in edges:
-                if i!=j and solution_x[(i,j)] > 0.05:
+                if i!=j and solution_y[(i,j)] > 0.05:
                     S.add_edge(i,j)
 
       # Find connected components (subtours)
@@ -152,13 +174,13 @@ def subtourelim(model, where):
 
       # Add subtour elimination constraints for each disconnected component
       for subtour in components:
-        if 0 in subtour:
+        if model._depot in subtour:
           continue
 
         expr_arc = gp.quicksum(model._y[i,j] for i in subtour for j in subtour if i!=j and (i,j) in model._edges)
-
         model.cbLazy((expr_arc <= len(subtour) - 1))
 
+depot = 1
 
 # Set-up lazy constraints and call variables
 m.Params.LazyConstraints =1
@@ -166,6 +188,7 @@ m._x = x
 m._y = y
 m._edges = edges
 m._N = n_nodes
+m._depot = depot
 m.optimize(subtourelim)
 
 m.write('optimal_run.lp')
@@ -177,3 +200,40 @@ for v in m.getVars():
 
 print('Total profit: ', m.objVal)
 
+
+visited_edges = [edge for edge in edges if y[edge].x>0.05]
+visited_nodes = set()
+for edge in visited_edges:
+    i,j = edge
+    visited_nodes.update({i,j})
+
+S = nx.Graph()
+for i in visited_nodes:
+   for j in visited_nodes:
+      if (i,j) in edges:
+        if i != j and y[(i,j)].x > 0.05:
+            S.add_edge(i,j)
+
+components = list(nx.connected_components(S))
+
+for subtour in components:
+   sum([y[(i,j)].x for i in subtour for j in subtour if i != j and (i,j) in edges])
+   print(len(subtour) - 1)
+
+
+# Draw final graph
+F = nx.DiGraph()
+
+for i in nodes:
+   for j in nodes:
+      if (i,j) in edges:
+        if x[(i,j)].x >= 0.05:
+            F.add_edge(i,j)
+
+pos = nx.spring_layout(F)
+plt.figure()
+nx.draw(F, pos, with_labels=True, node_color='lightblue', edge_color='gray', arrows=True)
+# nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red')
+
+plt.title("Optimal Run")
+plt.show()
