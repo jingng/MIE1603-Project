@@ -69,20 +69,22 @@ R = nx.DiGraph(H)
 
 # Add passes
 for edge in R.edges:
-    R.edges[edge]['passes']=1
+    R.edges[edge]['visited']=1
 
 # Define model
 m = gp.Model("mp")
 
 edges, lengths = gp.multidict({edge:H.edges[edge]['length'] for edge in H.edges })
-profit = {edge: (10 if edge in G.edges else 1) for edge in H.edges}
+profit = {edge: (10 if edge in G.edges and R.edges[edge]['visited']==0 else 1) for edge in H.edges}
 penalty = {edge: (5 if edge in R.edges else 1) for edge in H.edges}
 
 x = m.addVars(edges, name="traversed", vtype=GRB.INTEGER) # number of times arc (i,j) is traversed
-x.update({(j,i):x[i,j] for i,j in edges}) 
+# x.update({(j,i):x[i,j] for i,j in edges}) 
 
 y = m.addVars(edges, name="run", vtype=GRB.BINARY) # arc (i,j) is chosen to be ran, {0,1}
-y.update({(j,i):y[i,j] for i,j in edges})
+# y.update({(j,i):y[i,j] for i,j in edges})
+
+z = m.addVars({(i,j) for i in nodes_lst for j in nodes_lst if i<j}, name='profitable_route', vtype=GRB.BINARY)
 
 ## Constraints
 
@@ -90,7 +92,8 @@ y.update({(j,i):y[i,j] for i,j in edges})
 symm = m.addConstrs((x.sum(i,'*') == x.sum('*', i) for i in node_dict), name = 'symmetry')
 
 # Connectivity Constraint
-conn_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes_lst for j in nodes_lst if i!=j and j in node_dict[i]))
+conn1_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes_lst for j in nodes_lst if i!=j and j in node_dict[i]))
+conn2_const = m.addConstrs((y[i,j]*10 >= x[i,j] for i in nodes_lst for j in nodes_lst if i!=j and j in node_dict[i]))
 
 # Total Length Constraint
 total_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_length')
@@ -98,7 +101,13 @@ total_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_
 # Start at start node
 start_node = m.addConstrs((y.sum(1, j)>=1 for j in node_dict[1]), name='start_node')
 
-m.setObjective(y.prod(profit)-x.prod(penalty), GRB.MAXIMIZE)
+# Set which routes are profitable
+
+profit_1 = m.addConstrs((z[i,j] >= y[i,j] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
+profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
+profit_3 = m.addConstrs((y[i,j] + y[j,i] >= z[i,j] for i in nodes_lst for j in nodes_lst if i<=j and (i,j) in edges))
+
+m.setObjective(z.prod(profit)-x.prod(penalty), GRB.MAXIMIZE)
 
 def subtourelim(model, where):
     if where == GRB.Callback.MIPSOL:
