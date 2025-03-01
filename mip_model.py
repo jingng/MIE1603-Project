@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import generate_instances
 
-total_length = 60
+total_length = 75
 
 n_nodes = 9
 nodes = [i for i in range(1, n_nodes+1)]
@@ -102,13 +102,18 @@ G.add_edges_from(g_edge_lst)
 # for edge in R.edges:
 #     R.edges[edge]['visited']=1
 
-# 3. Only H/G ran, R = H/G
+# 2. No Roads have been ran, R is empty
 R = nx.DiGraph(H)
 for edge in R.edges:
-   if edge in G.edges:
-      R.edges[edge]["visited"]=0
-   else:
-      R.edges[edge]["visited"]=1
+    R.edges[edge]['visited']=0
+
+# 3. Only H/G ran, R = H/G
+# R = nx.DiGraph(H)
+# for edge in R.edges:
+#    if edge in G.edges:
+#       R.edges[edge]["visited"]=0
+#    else:
+#       R.edges[edge]["visited"]=1
 
 # Define model
 m = gp.Model("mp")
@@ -118,10 +123,7 @@ profit = {edge: (50 if edge in G.edges and R.edges[edge]['visited']==0 else 0) f
 penalty = {edge: (20 if edge in R.edges else 0) for edge in H.edges}
 
 x = m.addVars(edges, name="traversed", vtype=GRB.INTEGER) # number of times arc (i,j) is traversed
-# x.update({(j,i):x[i,j] for i,j in edges}) 
-
 y = m.addVars(edges, name="run", vtype=GRB.BINARY) # arc (i,j) is chosen to be ran, {0,1}
-
 z = m.addVars({(i,j) for i in nodes for j in nodes if i<j}, name='profitable_route', vtype=GRB.BINARY)
 
 ## Constraints
@@ -129,7 +131,7 @@ z = m.addVars({(i,j) for i in nodes for j in nodes if i<j}, name='profitable_rou
 # Symmetry Constraint
 symm = m.addConstrs((x.sum(i,'*') == x.sum('*', i) for i in node_dict), name = 'symmetry')
 
-# Connectivity Constraint
+# Connectivity Constraint (bi-conditional)
 conn1_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
 conn2_const = m.addConstrs((y[i,j]*10 >= x[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
 
@@ -139,7 +141,7 @@ total_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_
 # Start at start node
 start_node = m.addConstrs((y.sum(1, j)>=1 for j in node_dict[1]), name='start_node')
 
-# Set which routes are profitable
+# Set only one route as
 
 profit_1 = m.addConstrs((z[i,j] >= y[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
 profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes for j in nodes if i<=j and (i,j) in edges))
@@ -200,27 +202,6 @@ for v in m.getVars():
 
 print('Total profit: ', m.objVal)
 
-
-visited_edges = [edge for edge in edges if y[edge].x>0.05]
-visited_nodes = set()
-for edge in visited_edges:
-    i,j = edge
-    visited_nodes.update({i,j})
-
-S = nx.Graph()
-for i in visited_nodes:
-   for j in visited_nodes:
-      if (i,j) in edges:
-        if i != j and y[(i,j)].x > 0.05:
-            S.add_edge(i,j)
-
-components = list(nx.connected_components(S))
-
-for subtour in components:
-   sum([y[(i,j)].x for i in subtour for j in subtour if i != j and (i,j) in edges])
-   print(len(subtour) - 1)
-
-
 # Draw final graph
 F = nx.DiGraph()
 
@@ -237,3 +218,24 @@ nx.draw(F, pos, with_labels=True, node_color='lightblue', edge_color='gray', arr
 
 plt.title("Optimal Run")
 plt.show()
+
+# Used to check sec
+# visited_edges = [edge for edge in edges if y[edge].x>0.05]
+# visited_nodes = set()
+# for edge in visited_edges:
+#     i,j = edge
+#     visited_nodes.update({i,j})
+
+# S = nx.Graph()
+# for i in visited_nodes:
+#    for j in visited_nodes:
+#       if (i,j) in edges:
+#         if i != j and y[(i,j)].x > 0.05:
+#             S.add_edge(i,j)
+
+# components = list(nx.connected_components(S))
+
+# for subtour in components:
+#    sum([y[(i,j)].x for i in subtour for j in subtour if i != j and (i,j) in edges])
+#    print(len(subtour) - 1)
+
