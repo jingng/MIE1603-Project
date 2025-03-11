@@ -25,7 +25,7 @@ def subtourelim(model, where):
 
     ## Subtour elimination
     # Identify visited nodes
-      visited_edges = [edge for edge in model._edges if solution_y[edge]>0.05]
+      visited_edges = [edge for edge in model._edges if solution_x[edge]>0.05]
       visited_nodes = set()
       for edge in visited_edges:
         i,j = edge
@@ -36,7 +36,7 @@ def subtourelim(model, where):
       for i in visited_nodes:
          for j in visited_nodes:
             if (i,j) in model._edges:
-                if i!=j and solution_y[(i,j)] > 0.05:
+                if i!=j and solution_x[(i,j)] > 0.05:
                     S.add_edge(i,j)
 
       # Find connected components (subtours)
@@ -47,7 +47,7 @@ def subtourelim(model, where):
         if model._depot in subtour:
           continue
 
-        expr_arc = gp.quicksum(model._y[i,j] for i in subtour for j in subtour if i!=j and (i,j) in model._edges)
+        expr_arc = gp.quicksum(model._x[i,j] for i in subtour for j in subtour if i!=j and (i,j) in model._edges)
         model.cbLazy((expr_arc <= len(subtour) - 1))
 
 def solve_MIP(C, total_length, start_node_no, time_limit):
@@ -88,10 +88,12 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
   # Connectivity Constraint (bi-conditional)
   conn1_const = m.addConstrs((x[i,j] >= y[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
-  conn2_const = m.addConstrs((y[i,j]*500 >= x[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
+  conn2_const = m.addConstrs((y[i,j]*2 >= x[i,j] for i in nodes for j in nodes if i!=j and j in node_dict[i]))
 
   # Total Length Constraint
-  total_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_length')
+  max_length_const = m.addConstr((x.prod(lengths)<=total_length), name = 'total_length')
+  min_length_const = m.addConstr((x.prod(lengths)>=total_length*0.8), name = 'total_length')
+
 
   # Start at start node
   start_node = m.addConstrs((y.sum(start_node_no, j)>=1 for j in node_dict[start_node_no]), name='start_node') ## this crashes the model, makes it infeasible
@@ -102,8 +104,12 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes for j in nodes if i<=j and (i,j) in edges))
   profit_3 = m.addConstrs((y[i,j] + y[j,i] >= z[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
 
+  # Stop model from running the same route too many times
+  # limit_run = m.addConstrs(((x[i,j] <=2 for i in nodes for j in nodes if (i,j) in edges)))
+
+
   print('add objective function...')
-  m.setObjective(z.prod(profit)-x.prod(penalty)-y.prod(visited), GRB.MAXIMIZE)
+  m.setObjective(z.prod(profit)-z.prod(penalty)-x.prod(visited), GRB.MAXIMIZE)
 
   # Set-up lazy constraints and call variables
   m.Params.LazyConstraints = 1
@@ -135,12 +141,14 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     for j in nodes:
         if (i,j) in edges:
           if x[(i,j)].x >= 0.05:
-              F.add_edge(i,j)
+              F.add_edge(i,j, visited=float(x[(i,j)].x))
+
 
   pos = nx.spring_layout(F)
   plt.figure()
   nx.draw(F, pos, with_labels=True, node_color='lightblue', edge_color='gray', arrows=True)
   plt.title("Optimal Run")
+  # plt.show()
 
   # Add last solution data
   obj=m.ObjVal
@@ -158,46 +166,52 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   # Create final graph solution
   print("saving graphs to file", end=" ", flush=True)
 
-  with open(instance + '_' + str(total_length)+'.pkl', "wb") as file:
+  with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test') +'.pkl', "wb") as file:
       pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
   print("complete!")
 
 
 # Parameters
-# total_length=100
-total_length_lst = [1000, 2000, 5000]
-instance_lst = ["instance-jess-min.pkl", "instance-jess.pkl", "instance-jin.pkl"]
-start_node_no = 8581834456 # Start node for delta, in instance-jess-min and instance-jess graphs
+total_length_lst = [1000, 5000, 8000, 10000, 15000]# [1000, 2000, 5000]
+instance_lst = ["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
+start_node_no = 6813225352
+# start_node_no = 260611726
+# start_node_no = 8581834456 # Start node for delta, in instance-jess-min and instance-jess graphs
 time_limit=3600
-# instance_name = "instance-jess-min"
+
 
 for instance in instance_lst:
   for total_length in total_length_lst:
 
-    log_filepath = "C://Users//Jin//Github//MIE1603-Project//logs_cv//"
-    log_filename = log_filepath + instance + '_' + str(total_length)
+    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_instance-jess-min_3600//"
+    log_filename = log_filepath + instance + '_' + str(total_length) + str('_test')
 
     print("reading instance file...")
 
-    C  = pd.read_pickle(instance)
+    C  = pd.read_pickle(instance +'.pkl')
 
-    # C = pd.read_pickle("instance-jess-min.pkl")
-    # C = pd.read_pickle("instance-jess.pkl")
-    # C = pd.read_pickle("instance-jin.pkl")
+    C = ox.truncate.truncate_graph_dist(C,start_node_no,total_length)
 
     # Run experiments
     print('running experiment with ' + str(total_length) + ' total_length')
     solve_MIP(C, total_length, start_node_no, time_limit)
 
 
-S = pd.read_pickle("instance-jess-min_100.pkl")
-pos = nx.spring_layout(S)
-plt.figure()
-nx.draw(S, pos, with_labels=True, node_color='lightblue', edge_color='gray', arrows=True)
-plt.title("Optimal Run")
+# Read final graph 
+# S = pd.read_pickle("instance-jess-min.pkl_1000.pkl")
+# pos = nx.spring_layout(S)
+# plt.figure()
+# nx.draw(S, pos, with_labels=True, node_color='lightblue', edge_color='gray', arrows=True)
+# plt.title("Optimal Run")
 # plt.show()
 
+# Finding a better start node
+# visited = {edge: C.edges[edge]['visited'] for edge in C.edges}
+# max_visits = max(visited.values())
+# {edge for edge in C.edges if C.edges[edge]['visited'] == max_visits }
+# jess most visited edge
+# (269274922, 1351071732)
 
 # F = nx.MultiDiGraph(F)
 
