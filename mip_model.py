@@ -78,7 +78,6 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   y = m.addVars(edges, name="run", vtype=GRB.BINARY) # arc (i,j) is chosen to be ran, {0,1}
 
   z = m.addVars({(i,j) for i,j in edges if i< j}, name = 'profitable_route', vtype=GRB.BINARY)
-  # z = m.addVars({(i,j) for i in nodes for j in nodes if i<j}, name='profitable_route', vtype=GRB.BINARY)
 
   ## Constraints
   print('adding constraints...')
@@ -103,10 +102,6 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   profit_1 = m.addConstrs((z[i,j] >= y[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
   profit_2 = m.addConstrs((z[i,j] >= y[j,i] for i in nodes for j in nodes if i<=j and (i,j) in edges))
   profit_3 = m.addConstrs((y[i,j] + y[j,i] >= z[i,j] for i in nodes for j in nodes if i<=j and (i,j) in edges))
-
-  # Stop model from running the same route too many times
-  # limit_run = m.addConstrs(((x[i,j] <=2 for i in nodes for j in nodes if (i,j) in edges)))
-
 
   print('add objective function...')
   m.setObjective(z.prod(profit)-z.prod(penalty)-x.prod(visited), GRB.MAXIMIZE)
@@ -134,6 +129,7 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
   print('Total profit: ', m.objVal)
 
+
   # Draw final graph
   F = nx.DiGraph()
 
@@ -143,6 +139,14 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
           if x[(i,j)].x >= 0.05:
               F.add_edge(i,j, visited=float(x[(i,j)].x))
 
+  # Find total distance
+  run_length = 0
+  for edge in F.edges:
+      run_length += lengths[edge]*F.edges[edge]['visited']
+      # print(edge, lengths[edge])
+      # print(edge, S.edges[edge]['visited'])
+
+  print('Total length : ' + str(run_length))
 
   pos = nx.spring_layout(F)
   plt.figure()
@@ -173,13 +177,15 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 
 # Parameters
-total_length_lst = [1000, 5000, 8000, 10000, 15000]# [1000, 2000, 5000]
-instance_lst = ["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
-start_node_no = 6813225352
-# start_node_no = 260611726
-# start_node_no = 8581834456 # Start node for delta, in instance-jess-min and instance-jess graphs
-time_limit=3600
+total_length_lst = [1000, 5000, 8000, 10000, 15000]
+instance_lst = ["instance-jess"]#["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
 
+# start_node_no = 6813225352 # Start node for instance-jess-min
+
+start_node_no = 1004361926 # New start node for instance-jess
+
+
+time_limit=3600
 
 for instance in instance_lst:
   for total_length in total_length_lst:
@@ -198,37 +204,12 @@ for instance in instance_lst:
     solve_MIP(C, total_length, start_node_no, time_limit)
 
 
-# Read final graph 
-# S = pd.read_pickle("instance-jess-min.pkl_1000.pkl")
-# pos = nx.spring_layout(S)
-# plt.figure()
-# nx.draw(S, pos, with_labels=True, node_color='lightblue', edge_color='gray', arrows=True)
-# plt.title("Optimal Run")
-# plt.show()
+# C = pd.read_pickle('instance-jess.pkl')
+# start_node_no = 6571986444
+# C = ox.truncate.truncate_graph_dist(C,start_node_no,500)
 
-# Finding a better start node
-# visited = {edge: C.edges[edge]['visited'] for edge in C.edges}
-# max_visits = max(visited.values())
-# {edge for edge in C.edges if C.edges[edge]['visited'] == max_visits }
-# jess most visited edge
-# (269274922, 1351071732)
-
-# F = nx.MultiDiGraph(F)
-
-# # Plot map 
-# fig, ax = ox.plot.plot_graph(
-#     F,
-#     show=False,
-#     close=False,
-#     bgcolor="#333333",
-#     edge_color="w",
-#     edge_linewidth=0.3,
-#     node_size=1,
-#     node_color='r'
-# )
-
-# plt.show()
-
+# C = nx.Graph(C)
+# nx.connected_components(C)
 
 #######################################################################################
 
