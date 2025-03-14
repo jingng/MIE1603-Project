@@ -129,7 +129,6 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
   print('Total profit: ', m.objVal)
 
-
   # Draw final graph
   F = nx.DiGraph()
 
@@ -180,12 +179,10 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 total_length_lst = [1000, 5000, 8000, 10000, 15000]
 instance_lst = ["instance-jess"]#["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
 
-# start_node_no = 6813225352 # Start node for instance-jess-min
+start_node_no = 6813225352 # Start node for instance-jess-min
+# start_node_no = 1004361926 # New start node for instance-jess
 
-start_node_no = 1004361926 # New start node for instance-jess
-
-
-time_limit=3600
+time_limit=60#3600
 
 for instance in instance_lst:
   for total_length in total_length_lst:
