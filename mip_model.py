@@ -117,6 +117,7 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   m._depot = start_node_no
   m.setParam('TimeLimit', time_limit)
 
+
   print('start solving model...')
   m.optimize(subtourelim)
 
@@ -169,26 +170,26 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   # Create final graph solution
   print("saving graphs to file", end=" ", flush=True)
 
-  with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test') +'.pkl', "wb") as file:
+  with open('sol_graph_'+instance + '_' + str(total_length)+'.pkl', "wb") as file:    #+ str('_removed') 
       pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
   print("complete!")
 
 
 # Parameters
-total_length_lst = [1000, 5000, 8000, 10000, 15000]
-instance_lst = ["instance-jess"]#["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
+total_length_lst =[1000, 5000, 8000, 10000, 15000]
+instance_lst = ["instance-jess-min-removed","instance-jess-removed"]##["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352 # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
 
-time_limit=60#3600
+time_limit=3600
 
 for instance in instance_lst:
   for total_length in total_length_lst:
 
-    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_instance-jess-min_3600//"
-    log_filename = log_filepath + instance + '_' + str(total_length) + str('_test')
+    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_jess_3600//"
+    log_filename = log_filepath + instance + '_' + str(total_length) #+ str('_removed')
 
     print("reading instance file...")
 

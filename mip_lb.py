@@ -108,7 +108,7 @@ def callback(model, where):
             new_solution = get_lower_bound(relaxation_sol, model._nodes, model._edges)
 
             # Objective value of current solution
-            current_obj_val = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
+            current_obj_val = model.cbGet(GRB.Callback.MIPSOL_OBJBST)
 
             # Evaluating objective value at new solution
             objective = model.getObjective()
@@ -192,9 +192,9 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     # m.write('instance-jess.lp')
     # m.optimize()
 
-    for v in m.getVars():
-        if v.x > 1e-6:
-            print(v.varName, v.x)
+    # for v in m.getVars():
+    #     if v.x > 1e-6:
+    #         print(v.varName, v.x)
 
     print('Total profit: ', m.objVal)
 
@@ -229,35 +229,35 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     m._data.append((time, obj, bound))
 
     # Record results
-    # with open(log_filename + '.csv', "w") as f:
-    #     for sol_data in m._data:
-    #         time, obj, bound = sol_data
+    with open(log_filename + '.csv', "w") as f:
+        for sol_data in m._data:
+            time, obj, bound = sol_data
 
-    #         f.write("{}, {}, {}\n".format(time, obj, bound))
+            f.write("{}, {}, {}\n".format(time, obj, bound))
 
     # Create final graph solution
     print("saving graphs to file", end=" ", flush=True)
 
-    # with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test') +'.pkl', "wb") as file:
-    #     pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
+    with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test_better_lb') +'.pkl', "wb") as file:
+        pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
     print("complete!")
 
 
 # Parameters
-total_length_lst = [5000]#[1000, 5000, 8000, 10000, 15000]
-instance_lst = ["instance-jess-min"]#["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
+total_length_lst = [1000, 5000, 8000, 10000, 15000]
+instance_lst = ["instance-jess-min","instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352 # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
 
-time_limit=120#3600
+time_limit=3600
 
 for instance in instance_lst:
   for total_length in total_length_lst:
 
-    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_instance-jess-min_3600//"
-    log_filename = log_filepath + instance + '_' + str(total_length) + str('_test')
+    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_jess_3600//"
+    log_filename = log_filepath + instance + '_' + str(total_length) + str('_test_better_lb')
 
     print("reading instance file...")
 
