@@ -5,7 +5,7 @@ from shapely.geometry import LineString, Point
 
 
 def get_unique_number(lon, lat):
-    """ Assigns a unique identifier to a geographical coordinate.
+    """Assigns a unique identifier to a geographical coordinate.
     Parameters
     ----------
     lon: float
@@ -26,10 +26,14 @@ def get_unique_number(lon, lat):
     else:
         lon_double = lon
 
-    lat_int = int((lat_double * 10 ** abs(Decimal(str(lat_double)).as_tuple().exponent)))
-    lon_int = int((lon_double * 10 ** abs(Decimal(str(lon_double)).as_tuple().exponent)))
+    lat_int = int(
+        (lat_double * 10 ** abs(Decimal(str(lat_double)).as_tuple().exponent))
+    )
+    lon_int = int(
+        (lon_double * 10 ** abs(Decimal(str(lon_double)).as_tuple().exponent))
+    )
 
-    val = abs((lat_int << 16 & 0xffff0000) | (lon_int & 0x0000ffff))
+    val = abs((lat_int << 16 & 0xFFFF0000) | (lon_int & 0x0000FFFF))
     val = val % 2147483647
 
     # alternative use hash or other
@@ -38,7 +42,7 @@ def get_unique_number(lon, lat):
 
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, edge_geometry=True):
-    """ Convert a networkx.MultiDiGraph to node and/or edge pandas DataFrame.
+    """Convert a networkx.MultiDiGraph to node and/or edge pandas DataFrame.
 
     Parameters
     ----------
@@ -69,13 +73,13 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, edge_geometry=T
             for d in data:
                 d["geometry"] = Point(d["x"], d["y"])
             gdf_nodes = pd.DataFrame(data)
-            gdf_nodes.insert(loc=0, column='osmid', value=nodes)
+            gdf_nodes.insert(loc=0, column="osmid", value=nodes)
         else:
             gdf_nodes = pd.DataFrame(data)
-            gdf_nodes.insert(loc=0, column='osmid', value=nodes)
+            gdf_nodes.insert(loc=0, column="osmid", value=nodes)
 
     if edges:
-        u, v, k, data = zip(*G.edges(keys=True, data=True))
+        u, v, data = zip(*G.edges(data=True))
         if edge_geometry:
             G.graph["geometry"] = True
 
@@ -84,8 +88,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, edge_geometry=T
 
             for d, src, tgt in zip(data, u, v):
                 if "geometry" not in d:
-                    d["geometry"] = LineString((Point((longs[src], lats[src])),
-                                                Point((longs[tgt], lats[tgt]))))
+                    d["geometry"] = LineString(
+                        (Point((longs[src], lats[src])), Point((longs[tgt], lats[tgt])))
+                    )
             gdf_edges = pd.DataFrame(data)
 
         else:
@@ -93,9 +98,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, edge_geometry=T
             gdf_edges["geometry"] = None
             gdf_edges.crs = crs
 
-        gdf_edges["u"], gdf_edges["v"], gdf_edges["key"] = u, v, k
+        gdf_edges["u"], gdf_edges["v"] = u, v
 
-        gdf_edges = gdf_edges[["u", "v", "key"] + gdf_edges.columns.to_list()[:-3]]
+        gdf_edges = gdf_edges[["u", "v"] + gdf_edges.columns.to_list()[:-2]]
 
     if nodes and edges:
         return gdf_nodes, gdf_edges
