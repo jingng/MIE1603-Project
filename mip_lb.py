@@ -37,6 +37,10 @@ def get_lower_bound(relaxation_sol, nodes, edges):
         G.nodes[node]['supply'] = sum(G.edges[edge]['visited'] for edge in out_edges) - sum(G.edges[edge]['visited'] for edge in in_edges)
 
 
+    # with open('G_values.csv', "w") as f:
+    #     for edge in G.edges:
+    #         f.write(f"{edge},{G.edges[edge]['visited']}\n")
+
     # Check if the supply at all nodes is equal to 0, ie. if set of nodes where supply!=0 is empty, then all nodes[supply]=0
     supply_nodes = {nodes for nodes in G if G.nodes[node]['supply']!=0}
     demand_nodes = {nodes for nodes in G if G.nodes[node]['demand']!=0}
@@ -46,12 +50,25 @@ def get_lower_bound(relaxation_sol, nodes, edges):
         for edge in edges:
             new_solution[edge]=int(relaxation_sol[edge])
 
+
     if len(demand_nodes) < 10:
+
+        # Float values might cause a problem with min cost flow so turn into int
+        for edge in G.edges:
+            G.edges[edge]['visited'] = int(G.edges[edge]['visited']*100)
+
         flow = nx.min_cost_flow(G,weight="visited")
+
+    with open('G_values.pkl', "wb") as file:   
+        pickle.dump(G, file, pickle.HIGHEST_PROTOCOL)
 
     for u,v in G.edges:
         if u in flow and v in flow[u]:
-            new_solution[(u,v)]= flow[u][v]
+
+            if len(demand_nodes) < 10:
+                new_solution[(u,v)]= flow[u][v]/1000
+            else:
+                new_solution[(u,v)]= flow[u][v]
         else:
             new_solution[(u,v)] = 0
 
@@ -98,21 +115,44 @@ def callback(model, where):
         expr_arc = gp.quicksum(model._x[i,j] for i in subtour for j in subtour if i!=j and (i,j) in model._edges)
         model.cbLazy((expr_arc <= len(subtour) - 1))
 
-    if where ==  GRB.Callback.MIPNODE and GRB.Callback.MIPNODE_STATUS ==  GRB.OPTIMAL:
+    if where ==  GRB.Callback.MIPNODE and model.cbGet(GRB.Callback.MIPNODE_STATUS) == GRB.OPTIMAL:
 
         node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT)
 
         if node_count<=10 or (node_count <= 50 and node_count % 2 == 0) or node_count % 10 ==0:
 
-            relaxation_sol = model.cbGetNodeRel(model._x)
+            # relaxation_sol = model.cbGetNodeRel(model._x)
+            relaxation_sol = {edge: model.cbGetNodeRel(model._x[edge]) for edge in model._edges}
             new_solution = get_lower_bound(relaxation_sol, model._nodes, model._edges)
 
+            with open('relaxation_sol.csv', "w") as f:
+                for edge, value in relaxation_sol.items():
+                    f.write(f"{edge},{value}\n")
+            with open('new_sol.csv', "w") as f:
+                for edge, value in new_solution.items():
+                    f.write(f"{edge},{value}\n")
+
             # Objective value of current solution
-            current_obj_val = model.cbGet(GRB.Callback.MIPSOL_OBJBST)
+            current_obj_val = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
 
             # Evaluating objective value at new solution
             objective = model.getObjective()
             new_sol_obj = 0
+
+
+            # # This is currently wrong
+            # # Get the variables and their coefficients from the objective
+            # vars_in_obj = objective.getVars()   # Variables involved in the objective
+            # coefs_in_obj = objective.getCoeffs()  # Coefficients of those variables
+
+            # # Calculate the objective value at the new solution
+            # for var, coef in zip(vars_in_obj, coefs_in_obj):
+            #     var_name = var.getVarName()  # Get the name of the variable
+            #     if var_name in new_solution:  # Ensure the solution contains this variable
+            #         new_sol_obj += new_solution[var_name] * coef
+
+
+
             for i,j in objective.getVarCoeff():
                 new_solution += new_solution[i]*j
 
@@ -228,30 +268,30 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     time=m.Runtime
     m._data.append((time, obj, bound))
 
-    # Record results
-    with open(log_filename + '.csv', "w") as f:
-        for sol_data in m._data:
-            time, obj, bound = sol_data
+    # # Record results
+    # with open(log_filename + '.csv', "w") as f:
+    #     for sol_data in m._data:
+    #         time, obj, bound = sol_data
 
-            f.write("{}, {}, {}\n".format(time, obj, bound))
+    #         f.write("{}, {}, {}\n".format(time, obj, bound))
 
     # Create final graph solution
     print("saving graphs to file", end=" ", flush=True)
 
-    with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test_better_lb') +'.pkl', "wb") as file:
-        pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
+    # with open('sol_graph_'+instance + '_' + str(total_length)+ str('_test_better_lb') +'.pkl', "wb") as file:
+    #     pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
     print("complete!")
 
 
 # Parameters
-total_length_lst = [1000, 5000, 8000, 10000, 15000]
-instance_lst = ["instance-jess-min","instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
+total_length_lst = [5000]#[1000, 5000, 8000, 10000, 15000]
+instance_lst = ["instance-jess-min"]#,"instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352 # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
 
-time_limit=3600
+time_limit=60#3600
 
 for instance in instance_lst:
   for total_length in total_length_lst:
