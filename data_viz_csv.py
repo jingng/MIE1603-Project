@@ -31,14 +31,21 @@ def read_values(data):
 
   return sol_dict
 
-filepath = '/Users/jingong/Github/MIE1603-Project/experiment_jess_3600/'
+# filepath = '/Users/jingong/Github/MIE1603-Project/experiment_jess_3600/'
+filepath = 'C://Users//Jin//Github//MIE1603-Project//experiment_jess_3600//'
 
 instances = [
-#   'instance-jess-min_1000_test.csv',
-  'instance-jess-min_5000_test.csv',
-  'instance-jess-min_8000_test.csv',
-  'instance-jess-min_10000_test.csv',
-  'instance-jess-min_15000_test.csv'
+# #   'instance-jess-min_1000_test.csv',
+#   'instance-jess-min_5000_test.csv',
+#   'instance-jess-min_8000_test.csv',
+#   'instance-jess-min_10000_test.csv',
+#   'instance-jess-min_15000_test.csv'
+
+  #   'instance-jess-min_1000_test.csv',
+  'instance-jess-min-rem-aggressive_5000.csv',
+  'instance-jess-min-rem-aggressive_8000.csv',
+  'instance-jess-min-rem-aggressive_10000.csv',
+  'instance-jess-min-rem-aggressive_15000.csv'
 ]
 lengths = ['5 km','8 km','10 km','15 km']
 

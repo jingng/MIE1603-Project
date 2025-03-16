@@ -173,7 +173,7 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   log_filepath = "experiment_jess_1800/"
 
   with open(
-      log_filepath+"sol_graph_" + instance + "_" + str(total_length) + ".pkl", "wb",
+      log_filepath+"sol_graph_" + instance + "_" + str(total_length) + str('_rem_aggressive')+ ".pkl", "wb",
   ) as file:
       pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
@@ -182,7 +182,7 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 # Parameters
 total_length_lst =[5000, 10000, 15000]
-instance_lst = ["instance-jess-min","instance-jess"]##["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
+instance_lst = ["instance-jess-min-rem-aggressive","instance-jess-rem-aggressive"]##["instance-jess-min"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352 # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
@@ -193,7 +193,7 @@ for instance in instance_lst:
   for total_length in total_length_lst:
 
     log_filepath = "experiment_jess_1800/"
-    log_filename = log_filepath + instance + '_' + str(total_length) #+ str('_removed')
+    log_filename = log_filepath + instance + '_' + str(total_length) + str('_rem_aggressive')
 
     print("reading instance file...")
 

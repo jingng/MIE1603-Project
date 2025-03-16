@@ -76,8 +76,15 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
   print('adding variables...')
   x = m.addVars(edges, name="traversed", vtype=GRB.INTEGER) # number of times arc (i,j) is traversed
   y = m.addVars(edges, name="run", vtype=GRB.BINARY) # arc (i,j) is chosen to be ran, {0,1}
-
   z = m.addVars({(i,j) for i,j in edges if i< j}, name = 'profitable_route', vtype=GRB.BINARY)
+
+  ## Setting Priority
+  for edge in z:
+    z[edge].setAttr("BranchPriority",100)
+  for edge in y:
+     y[edge].setAttr("BranchPriority",75)
+  for edge in x:
+     y[edge].setAttr("BranchPriority",50)
 
   ## Constraints
   print('adding constraints...')
@@ -169,13 +176,15 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
   # Create final graph solution
   print("saving graphs to file", end=" ", flush=True)
-  
-  log_filepath = "experiment_jess_1800/"
 
+  log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_jess_1800//"
   with open(
-      log_filepath+"sol_graph_" + instance + "_" + str(total_length) + ".pkl", "wb",
+      log_filepath+"sol_graph_" + instance + "_" + str(total_length) + str("_branching") + ".pkl", "wb",
   ) as file:
       pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
+
+  # with open('sol_graph_'+instance + '_' + str(total_length)+ str('_w/_branching')+'.pkl', "wb") as file:    #+ str('_removed') 
+  #     pickle.dump(F, file, pickle.HIGHEST_PROTOCOL)
 
   print("complete!")
 
@@ -192,8 +201,8 @@ time_limit=1800
 for instance in instance_lst:
   for total_length in total_length_lst:
 
-    log_filepath = "experiment_jess_1800/"
-    log_filename = log_filepath + instance + '_' + str(total_length) #+ str('_removed')
+    log_filepath = "C://Users//Jin//Github//MIE1603-Project//experiment_jess_1800//"
+    log_filename = log_filepath + instance + '_' + str(total_length) + str('_branching')
 
     print("reading instance file...")
 

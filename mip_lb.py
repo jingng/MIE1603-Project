@@ -401,7 +401,9 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     # Create final graph solution
     print("saving graphs to file", end=" ", flush=True)
 
+    log_filepath = "experiment_jess_1800/"
     with open(
+        log_filepath+
         "sol_graph_"
         + instance
         + "_"
@@ -416,19 +418,18 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 
 # Parameters
-total_length_lst = [1000, 5000, 8000, 10000, 15000]
+total_length_lst = [5000, 10000, 15000]
 instance_lst = [
-    "instance-jess-min"
-]  # ,"instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
+    "instance-jess-min","instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352  # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
 
-time_limit = 3600
+time_limit = 1800#3600
 
 for instance in instance_lst:
     for total_length in total_length_lst:
-        log_filepath = "experiment_jess_3600/"
+        log_filepath = "experiment_jess_1800/"
         log_filename = (
             log_filepath + instance + "_" + str(total_length) + str("_test_better_lb")
         )
