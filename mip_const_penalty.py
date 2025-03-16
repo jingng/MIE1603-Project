@@ -17,79 +17,6 @@ from gurobipy import GRB
 import generate_instances
 
 
-def get_lower_bound(relaxation_sol, edges, int_tol):
-    new_solution = relaxation_sol
-
-    # Create solution graph
-    G = nx.DiGraph()
-
-    for edge in edges:
-        i, j = edge
-        G.add_edge(i, j, visited=relaxation_sol["x"][edge])
-
-    H = G.copy()
-
-    # Remove all edges from H where visited is an integer number, otherwise retain only fractional part of visited
-    for i, j in G.edges:
-        if abs(H[i][j]["visited"] - math.floor(H[i][j]["visited"] + 0.5)) <= int_tol:
-            H.remove_edge(i, j)
-        else:
-            H[i][j]["visited"] = H[i][j]["visited"] % 1
-
-    # Set demand equal to excess visited at node
-    for node in H.nodes:
-        in_edges = H.in_edges(node)
-        out_edges = H.out_edges(node)
-
-        H.nodes[node]["demand"] = sum(
-            H.edges[edge]["visited"] for edge in out_edges
-        ) - sum(H.edges[edge]["visited"] for edge in in_edges)
-
-    # with open('G_values.csv', "w") as f:
-    #     for edge in G.edges:
-    #         f.write(f"{edge},{G.edges[edge]['visited']}\n")
-
-    # Set of nodes where demand != 0
-    demand_nodes = {
-        node: H.nodes[node]["demand"]
-        for node in H
-        if abs(H.nodes[node]["demand"] - math.floor(H.nodes[node]["demand"] + 0.5))
-        > int_tol
-    }
-
-    if len(demand_nodes) == 0:
-        # set x = int(x)
-        new_solution["x"] = {
-            edge: int(relaxation_sol["x"][edge]) for edge in relaxation_sol["x"]
-        }
-    elif len(demand_nodes) < 10:
-        # calculate min cost flow and set x from that
-        nx.set_node_attributes(G, 0, "demand")
-        nx.set_node_attributes(G, demand_nodes, "demand")
-        print(sum(demand_nodes.values()))
-        flow = nx.min_cost_flow(G, weight="visited")
-        for u, v in G.edges:
-            if u in flow and v in flow[u]:
-                new_solution["x"][(u, v)] = flow[u][v]
-            else:
-                new_solution["x"][(u, v)] = 0
-    else:  # probably not feasible, so return
-        return
-
-    # set y and z based on x
-    new_solution["y"] = {
-        edge: 1 if new_solution["x"][edge] > 0 else 0 for edge in relaxation_sol["y"]
-    }
-    new_solution["z"] = {
-        (i, j): 1
-        if new_solution["y"][(i, j)] == 1 or new_solution["y"][(j, i)] == 1
-        else 0
-        for i, j in relaxation_sol["z"]
-    }
-
-    return new_solution
-
-
 def callback(model, where):
     if where == GRB.Callback.MIPSOL:
         # Get results
@@ -133,104 +60,6 @@ def callback(model, where):
                 if i != j and (i, j) in model._edges
             )
             model.cbLazy((expr_arc <= len(subtour) - 1))
-
-    if (
-        where == GRB.Callback.MIPNODE
-        and model.cbGet(GRB.Callback.MIPNODE_STATUS) == GRB.OPTIMAL
-    ):
-        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT)
-
-        if (
-            node_count <= 10
-            or (node_count <= 50 and node_count % 2 == 0)
-            or node_count % 10 == 0
-        ):
-            # relaxation_sol = model.cbGetNodeRel(model._x)
-            relaxation_sol = {
-                "x": {
-                    edge: model.cbGetNodeRel(model._x[edge]) for edge in model._edges
-                },
-                "y": {
-                    edge: model.cbGetNodeRel(model._y[edge]) for edge in model._edges
-                },
-                "z": {
-                    (i, j): model.cbGetNodeRel(model._z[(i, j)])
-                    for i, j in model._edges
-                    if i < j
-                },
-            }
-            new_solution = get_lower_bound(
-                relaxation_sol, model._edges, model.Params.IntFeasTol
-            )
-            if new_solution is None:
-                return
-            new_sol_arr = np.zeros(len(model.getVars()))
-            for edge, val in new_solution["x"].items():
-                new_sol_arr[model._x[edge].index] = val
-            for edge, val in new_solution["y"].items():
-                new_sol_arr[model._y[edge].index] = val
-            for edge, val in new_solution["z"].items():
-                new_sol_arr[model._z[edge].index] = val
-            lb_constr = model.getConstrByName("total_length_lb")
-            new_sol_arr[model._v.index] = lb_constr.rhs - sum(
-                new_sol_arr[model.getRow(lb_constr).getVar(idx).index]
-                * model.getRow(lb_constr).getCoeff(idx)
-                for idx in range(model.getRow(lb_constr).size())
-            )
-
-            # Check if new solution is feasible, return if not
-            # for constr in model.getConstrs():
-            #     lhs = sum(
-            #         new_sol_arr[model.getRow(constr).getVar(idx).index]
-            #         * model.getRow(constr).getCoeff(idx)
-            #         for idx in range(model.getRow(constr).size())
-            #     )
-            #     rhs = constr.RHS
-            #     if constr.Sense == GRB.LESS_EQUAL and lhs > rhs:
-            #         return
-            #     if constr.Sense == GRB.GREATER_EQUAL and lhs < rhs:
-            #         return
-            #     if constr.Sense == GRB.EQUAL and abs(rhs-lhs) > model.Params.FeasibilityTol:
-            #         return
-
-            # with open("relaxation_sol.csv", "w") as f:
-            #     for edge, value in relaxation_sol.items():
-            #         f.write(f"{edge},{value}\n")
-            # with open("new_sol.csv", "w") as f:
-            #     for edge, value in new_solution.items():
-            #         f.write(f"{edge},{value}\n")
-
-            # Objective value of current solution
-            current_obj_val = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
-
-            objective = model.getObjective()
-            obj_val = sum(
-                new_sol_arr[objective.getVar(idx).index] * objective.getCoeff(idx)
-                for idx in range(objective.size())
-            )  # Calculcate objective value for new solution
-
-            # If your feasible solution is better than gurobi's, replace the solution
-            if obj_val > current_obj_val:
-                model.cbSetSolution(model.getVars(), new_sol_arr)
-            # Evaluating objective value at new solution
-            # new_sol_obj = 0
-
-            # # # This is currently wrong
-            # # # Get the variables and their coefficients from the objective
-            # # vars_in_obj = objective.getVars()   # Variables involved in the objective
-            # # coefs_in_obj = objective.getCoeffs()  # Coefficients of those variables
-
-            # # # Calculate the objective value at the new solution
-            # # for var, coef in zip(vars_in_obj, coefs_in_obj):
-            # #     var_name = var.getVarName()  # Get the name of the variable
-            # #     if var_name in new_solution:  # Ensure the solution contains this variable
-            # #         new_sol_obj += new_solution[var_name] * coef
-
-            # for i, j in objective.getVarCoeff():
-            #     new_solution += new_solution[i] * j
-
-            # if new_sol_obj > current_obj_val:
-            #     model.cbSetSolution(model._x, new_solution)
 
 
 def solve_MIP(C, total_length, start_node_no, time_limit):
@@ -416,7 +245,10 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 
 # Parameters
-total_length_lst = [1000, 5000, 8000, 10000, 15000]
+total_length_lst = [
+    1000,
+    5000,
+]  # 8000, 10000, 15000]
 instance_lst = [
     "instance-jess-min"
 ]  # ,"instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
@@ -424,13 +256,17 @@ instance_lst = [
 start_node_no = 6813225352  # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
 
-time_limit = 3600
+time_limit = 300
 
 for instance in instance_lst:
     for total_length in total_length_lst:
         log_filepath = "experiment_jess_3600/"
         log_filename = (
-            log_filepath + instance + "_" + str(total_length) + str("_test_better_lb")
+            log_filepath
+            + instance
+            + "_"
+            + str(total_length)
+            + str("_test_const_penalty")
         )
 
         print("reading instance file...")
