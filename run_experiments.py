@@ -1,10 +1,10 @@
 import subprocess
 import argparse
 
-try:
-    subprocess.call(["python3", "mip_model_rem_aggressive.py"])
-except:
-    print("Couldn't find a feasible solution in time limit for mip_model_rem_aggressive")
+# try:
+#     subprocess.call(["python3", "mip_model_rem_aggressive.py"])
+# except:
+#     print("Couldn't find a feasible solution in time limit for mip_model_rem_aggressive")
 
 try:
     subprocess.call(["python3", "mip_model.py"])
