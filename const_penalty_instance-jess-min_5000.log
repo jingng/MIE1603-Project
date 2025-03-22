@@ -1,0 +1,71 @@
+
+Gurobi 12.0.1 (win64) logging started Sat Mar 22 12:23:46 2025
+
+Set parameter LogFile to value "const_penalty_instance-jess-min_5000.log"
+Gurobi Optimizer version 12.0.1 build v12.0.1rc0 (win64 - Windows 11.0 (26100.2))
+
+CPU model: 11th Gen Intel(R) Core(TM) i7-11700 @ 2.50GHz, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Non-default parameters:
+TimeLimit  1800
+LogToConsole  0
+LazyConstraints  1
+
+Optimize a model with 24348 rows, 15396 columns and 70822 nonzeros
+Model fingerprint: 0x25eed44b
+Variable types: 1 continuous, 15395 integer (9237 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 3e+02]
+  Objective range  [9e-01, 4e+02]
+  Bounds range     [1e+00, 2e+03]
+  RHS range        [1e+00, 5e+03]
+Presolve removed 3742 rows and 1867 columns
+Presolve time: 0.10s
+Presolved: 20606 rows, 13529 columns, 53193 nonzeros
+Variable types: 1 continuous, 13528 integer (7990 binary)
+
+Root relaxation: objective 1.249732e+05, 2563 iterations, 0.02 seconds (0.04 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 124973.231    0 1096          - 124973.231      -     -    0s
+     0     0 102629.649    0  893          - 102629.649      -     -    0s
+     0     0 95877.5627    0  780          - 95877.5627      -     -    0s
+     0     0 91873.4425    0  759          - 91873.4425      -     -    0s
+     0     0 91846.7427    0  742          - 91846.7427      -     -    0s
+     0     0 90205.9372    0  677          - 90205.9372      -     -    0s
+     0     0 90185.1802    0  677          - 90185.1802      -     -    0s
+     0     0 89788.9530    0  696          - 89788.9530      -     -    1s
+     0     0 89770.4833    0  687          - 89770.4833      -     -    1s
+     0     0 89528.5414    0  718          - 89528.5414      -     -    1s
+     0     0 89499.3225    0  717          - 89499.3225      -     -    1s
+     0     0 89354.0525    0  640          - 89354.0525      -     -    1s
+     0     0 89352.6229    0  638          - 89352.6229      -     -    1s
+     0     0 89150.7143    0  720          - 89150.7143      -     -    1s
+     0     0 89147.0977    0  633          - 89147.0977      -     -    1s
+     0     0 88889.9363    0  686          - 88889.9363      -     -    1s
+     0     0 88729.2169    0  629          - 88729.2169      -     -    1s
+     0     0 88711.3714    0  628          - 88711.3714      -     -    1s
+     0     0 88482.2734    0  677          - 88482.2734      -     -    1s
+     0     0 88428.7574    0  635          - 88428.7574      -     -    1s
+     0     0 88423.8806    0  609          - 88423.8806      -     -    1s
+     0     0 88244.6380    0  650          - 88244.6380      -     -    1s
+     0     0 88227.5934    0  680          - 88227.5934      -     -    1s
+     0     0 88113.6850    0  666          - 88113.6850      -     -    1s
+     0     0 88112.7374    0  666          - 88112.7374      -     -    2s
+     0     0 87977.3191    0  704          - 87977.3191      -     -    2s
+     0     0 87965.0480    0  703          - 87965.0480      -     -    2s
+     0     0 87932.2024    0  656          - 87932.2024      -     -    2s
+     0     0 87928.7537    0  654          - 87928.7537      -     -    2s
+     0     0 87578.0244    0  712          - 87578.0244      -     -    2s
+     0     0 87575.4554    0  710          - 87575.4554      -     -    2s
+     0     0 87496.7173    0  524          - 87496.7173      -     -    2s
+     0     0 87492.7309    0  588          - 87492.7309      -     -    2s
+     0     0 87403.1328    0  704          - 87403.1328      -     -    2s
+     0     0 87382.4958    0  694          - 87382.4958      -     -    2s
+     0     0 87382.4958    0  693          - 87382.4958      -     -    2s
+     0     0 87350.1569    0  681          - 87350.1569      -     -    2s
+     0     0 87331.3187    0  681          - 87331.3187      -     -    2s
+     0     2 87282.8662    0  681          - 87282.8662      -     -    2s
