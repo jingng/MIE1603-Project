@@ -155,11 +155,11 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
   if m.solCount > 0:
 
-    for v in m.getVars():
-        if v.x > 1e-6:
-            print(v.varName, v.x)
+    # for v in m.getVars():
+    #     if v.x > 1e-6:
+    #         print(v.varName, v.x)
 
-    print('Total profit: ', m.objVal)
+    # print('Total profit: ', m.objVal)
 
     # Draw final graph
     F = nx.DiGraph()
@@ -192,7 +192,7 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
     # Create final graph solution
     print("saving graphs to file", end=" ", flush=True)
     
-    log_filepath = "final_run/"
+    log_filepath = "final_test/"
 
     with open(
         log_filepath+"sol_graph_" + instance + "_" + str(total_length) + str('_rem_aggressive')+ ".pkl", "wb",
