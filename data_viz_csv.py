@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+filepath = 'final_test/csv/instance-jess-min_5000.csv'
 
 def read_file(filepath):
   with open(filepath, 'r') as file:
@@ -12,60 +13,103 @@ def read_file(filepath):
 
 def read_values(data):
 
-  sol_dict={'t':[], 'bound':[],'obj':[], 'gap':[]}
+  sol_dict={'t':[], 'bound':[],'obj':[], 'gap':[], 'node_count':[]}
 
   for i in range(len(data)):
 
     time = float(data[i][0].split(',')[0])
     sol_dict['t'].append(time)
 
-    obj = float(data[i][2])
+    bound = float(data[i][1].split(',')[0])
+
+    obj = float(data[i][2].split(',')[0])
     sol_dict['obj'].append(obj)
 
-    bound = float(data[i][1].split(',')[0])
+    node_count = float(data[i][3].split(',')[0])
+    sol_dict['node_count'].append(node_count)
 
     if bound > 0.05:
         sol_dict['bound'].append(bound)
         gap = abs(bound - obj)/obj
         sol_dict['gap'].append(gap)
+    else:
+       sol_dict['bound'].append(None)
 
   return sol_dict
 
 # filepath = '/Users/jingong/Github/MIE1603-Project/experiment_jess_3600/'
-filepath = 'C://Users//Jin//Github//MIE1603-Project//experiment_jess_3600//'
+filepath = 'experiment_jess_1800/'
+filepath = 'final_test/csv/'
 
 instances = [
-# #   'instance-jess-min_1000_test.csv',
-#   'instance-jess-min_5000_test.csv',
-#   'instance-jess-min_8000_test.csv',
-#   'instance-jess-min_10000_test.csv',
-#   'instance-jess-min_15000_test.csv'
+   'instance-jess-min_5000.csv',
+   'instance-jess-min_10000.csv',
+   'instance-jess-min_15000.csv']
+#,
+   
+#   'instance-jess-min-rem-aggressive_5000_rem_aggressive.csv',
+#   'instance-jess-min-rem-aggressive_10000_rem_aggressive.csv',
+#   'instance-jess-min-rem-aggressive_15000_rem_aggressive.csv'
+# ]
 
-  #   'instance-jess-min_1000_test.csv',
-  'instance-jess-min-rem-aggressive_5000.csv',
-  'instance-jess-min-rem-aggressive_8000.csv',
-  'instance-jess-min-rem-aggressive_10000.csv',
-  'instance-jess-min-rem-aggressive_15000.csv'
-]
-lengths = ['5 km','8 km','10 km','15 km']
+instances = [
+   'instance-jess_5000.csv',
+   'instance-jess_10000.csv',
+   'instance-jess_15000.csv']
+
+lengths = ['5 km','10 km','15 km']#,'5 km removed','10 km removed','15 km removed', ]
+colors= ['steelblue', 'orange', 'seagreen']#, 'steelblue', 'orange', 'seagreen']
+# lengths = ['5 km','10 km','15 km'] # '8 km'
+
+# data = read_file(filepath+instances[0])
+# data_dict = read_values(data)
+
+# x = data_dict['t']
+# bound = data_dict['bound']
+# obj = data_dict['obj']
+# gap = data_dict['gap']
+# node_count = data_dict['node_count']
+
+# plt.plot(x, bound)
+# plt.plot(x, obj)
+# plt.show()
+
 
 for i in range(len(instances)):
 
     data = read_file(filepath+instances[i])
     data_dict = read_values(data)
 
-    time_first_bound = len(data_dict['t']) - len(data_dict['gap'])
-    x = data_dict['t'][time_first_bound:]
+    x = data_dict['t']
     bound = data_dict['bound']
-    obj = data_dict['obj'][time_first_bound:]
+    obj = data_dict['obj']
     gap = data_dict['gap']
+    node_count = data_dict['node_count']
 
-    plt.plot(x, gap, label=lengths[i])
-    plt.legend()
-    plt.title('MIP Gap for North Delta')
+    plt.plot(x, bound, label='Lower Bound')
+    plt.plot(x, obj, label='Objective Value')
+    plt.title(f'Profit for {instances[i]}')
+    plt.ylabel('Profit')
     plt.xlabel('Time (s)')
-    plt.ylabel('MIP Gap')
-    plt.ylim([0,0.4])
+    plt.ylim([0,max(obj) + 10000])
+    plt.legend()
+    plt.show()
 
-plt.show()
+    # time_first_bound = len(data_dict['t']) - len(data_dict['gap'])
+    # x = data_dict['t'][time_first_bound:]
+    # bound = data_dict['bound']
+    # obj = data_dict['obj'][time_first_bound:]
+    # gap = data_dict['gap']
+
+    # if 'rem' in lengths[i]:
+    #     plt.plot(x, gap, label=lengths[i], color=colors[i])
+    # else:
+    #    plt.plot(x, gap, label=lengths[i], linestyle='--', color=colors[i])
+    # plt.legend()
+    # # plt.title('MIP Gap for Min Instance')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('MIP Gap')
+    # plt.ylim([0,0.5])
+
+# plt.show()
 

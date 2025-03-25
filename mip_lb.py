@@ -438,8 +438,8 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 # Parameters
 total_length_lst = [5000, 10000, 15000]
-instance_lst = [
-    "instance-jess-min","instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
+instance_lst = ["instance-jin"]
+# ["instance-jess-min","instance-jess"]#, "instance-jess"]#, "instance-jin.pkl"]
 
 start_node_no = 6813225352  # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
@@ -448,6 +448,13 @@ time_limit = 1800#3600
 
 for instance in instance_lst:
     for total_length in total_length_lst:
+
+        if 'jess' in instance:
+            start_node_no = 6813225352
+        
+        if 'jin' in instance:
+            start_node_no = 394502562
+
         log_filepath = "final_test/"
         log_filename = (
             log_filepath + instance + "_" + str(total_length) + str("_test_better_lb")

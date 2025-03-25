@@ -277,8 +277,8 @@ def solve_MIP(C, total_length, start_node_no, time_limit):
 
 
 # Parameters
-total_length_lst = [5000, 10000, 15000]
-instance_lst = ["instance-jess-min", "instance-jess"]
+total_length_lst = [15000]#[5000, 10000, 15000]
+instance_lst = ["instance-jess"]#["instance-jess-min", "instance-jess"]
 
 start_node_no = 6813225352  # Start node for instance-jess-min
 # start_node_no = 1004361926 # New start node for instance-jess
