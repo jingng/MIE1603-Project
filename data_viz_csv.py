@@ -25,8 +25,8 @@ def read_values(data):
     obj = float(data[i][2].split(',')[0])
     sol_dict['obj'].append(obj)
 
-    node_count = float(data[i][3].split(',')[0])
-    sol_dict['node_count'].append(node_count)
+    # node_count = float(data[i][3].split(',')[0])
+    # sol_dict['node_count'].append(node_count)
 
     if bound > 0.05:
         sol_dict['bound'].append(bound)
@@ -94,6 +94,7 @@ for i in range(len(instances)):
     bound = data_dict['bound']
     obj = data_dict['obj']
     gap = data_dict['gap']
+    print(gap[-1])
     node_count = data_dict['node_count']
 
     axs[0,i].plot(x, bound, label='Lower Bound')
@@ -164,43 +165,61 @@ plt.show()
 
 
 
+filepath = 'experiment_jess_1800/'
+filepath = 'final_test/csv/'
+
+lengths = ['5 km','10 km','15 km','5 km removed','10 km removed','15 km removed', ]
+colors= ['steelblue', 'orange', 'seagreen', 'steelblue', 'orange', 'seagreen']
+# lengths = ['5 km','10 km','15 km'] # '8 km'
 
 
-# for i in range(len(instances)):
+instances = [
+   'final_test/csv/instance-jess-min_5000.csv',
+   'final_test/csv/instance-jess-min_10000.csv',
+   'final_test/csv/instance-jess-min_15000.csv',
+   'experiment_jess_1800\instance-jess-min-rem-aggressive_5000_rem_aggressive.csv',
+   'experiment_jess_1800\instance-jess-min-rem-aggressive_10000_rem_aggressive.csv',
+   'experiment_jess_1800\instance-jess-min-rem-aggressive_15000_rem_aggressive.csv'
 
-#     data = read_file(filepath+instances[i])
-#     data_dict = read_values(data)
 
-#     x = data_dict['t']
-#     bound = data_dict['bound']
-#     obj = data_dict['obj']
-#     gap = data_dict['gap']
-#     node_count = data_dict['node_count']
+   ]
 
-#     plt.plot(x, bound, label='Lower Bound')
-#     plt.plot(x, obj, label='Objective Value')
-#     plt.title(f'Profit for {instances[i]}')
-#     plt.ylabel('Profit')
-#     plt.xlabel('Time (s)')
-#     plt.ylim([0,max(obj) + 10000])
-#     plt.legend()
-#     plt.show()
+for i in range(len(instances)):
 
-    # time_first_bound = len(data_dict['t']) - len(data_dict['gap'])
-    # x = data_dict['t'][time_first_bound:]
+    data = read_file(instances[i])#filepath+instances[i])
+    data_dict = read_values(data)
+
+    # x = data_dict['t']
     # bound = data_dict['bound']
-    # obj = data_dict['obj'][time_first_bound:]
+    # obj = data_dict['obj']
     # gap = data_dict['gap']
+    # node_count = data_dict['node_count']
 
-    # if 'rem' in lengths[i]:
-    #     plt.plot(x, gap, label=lengths[i], color=colors[i])
-    # else:
-    #    plt.plot(x, gap, label=lengths[i], linestyle='--', color=colors[i])
-    # plt.legend()
-    # # plt.title('MIP Gap for Min Instance')
+    # plt.plot(x, gap)
+    # # plt.plot(x, bound, label='Lower Bound')
+    # # plt.plot(x, obj, label='Objective Value')
+    # # plt.title(f'Profit for {instances[i]}')
+    # plt.ylabel('Profit')
     # plt.xlabel('Time (s)')
-    # plt.ylabel('MIP Gap')
-    # plt.ylim([0,0.5])
+    # plt.ylim([0,max(obj) + 10000])
+    # plt.legend()
+    # plt.show()
 
-# plt.show()
+    time_first_bound = len(data_dict['t']) - len(data_dict['gap'])
+    x = data_dict['t'][time_first_bound:]
+    bound = data_dict['bound']
+    obj = data_dict['obj'][time_first_bound:]
+    gap = data_dict['gap']
+
+    if 'rem' in lengths[i]:
+        plt.plot(x, gap, label=lengths[i], color=colors[i])
+    else:
+       plt.plot(x, gap, label=lengths[i], linestyle='--', color=colors[i])
+    plt.legend()
+    # plt.title('MIP Gap for Min Instance')
+    plt.xlabel('Time (s)')
+    plt.ylabel('MIP Gap')
+    plt.ylim([0,0.5])
+
+plt.show()
 
