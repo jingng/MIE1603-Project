@@ -44,18 +44,19 @@ filepath = 'final_test/csv/'
 instances = [
    'instance-jess-min_5000.csv',
    'instance-jess-min_10000.csv',
-   'instance-jess-min_15000.csv']
-#,
-   
-#   'instance-jess-min-rem-aggressive_5000_rem_aggressive.csv',
-#   'instance-jess-min-rem-aggressive_10000_rem_aggressive.csv',
-#   'instance-jess-min-rem-aggressive_15000_rem_aggressive.csv'
-# ]
-
-instances = [
+   'instance-jess-min_15000.csv',
    'instance-jess_5000.csv',
    'instance-jess_10000.csv',
-   'instance-jess_15000.csv']
+   'instance-jess_15000.csv',
+   'instance-jin_5000.csv',
+   'instance-jin_10000.csv',
+   'instance-jin_15000.csv',
+   ]
+
+# instances = [
+#    'instance-jess_5000.csv',
+#    'instance-jess_10000.csv',
+#    'instance-jess_15000.csv']
 
 lengths = ['5 km','10 km','15 km']#,'5 km removed','10 km removed','15 km removed', ]
 colors= ['steelblue', 'orange', 'seagreen']#, 'steelblue', 'orange', 'seagreen']
@@ -74,6 +75,15 @@ colors= ['steelblue', 'orange', 'seagreen']#, 'steelblue', 'orange', 'seagreen']
 # plt.plot(x, obj)
 # plt.show()
 
+fig, axs = plt.subplots(3,3, sharex=True)
+
+instances = [
+   'instance-jess-min_5000.csv',
+   'instance-jess-min_10000.csv',
+   'instance-jess-min_15000.csv',
+   ]
+
+
 
 for i in range(len(instances)):
 
@@ -86,14 +96,95 @@ for i in range(len(instances)):
     gap = data_dict['gap']
     node_count = data_dict['node_count']
 
-    plt.plot(x, bound, label='Lower Bound')
-    plt.plot(x, obj, label='Objective Value')
-    plt.title(f'Profit for {instances[i]}')
-    plt.ylabel('Profit')
-    plt.xlabel('Time (s)')
-    plt.ylim([0,max(obj) + 10000])
-    plt.legend()
-    plt.show()
+    axs[0,i].plot(x, bound, label='Lower Bound')
+    axs[0,i].plot(x, obj, label='Objective Value')
+    axs[0,i].set_title(f'{instances[i]}')
+    axs[0,i].set_ylabel('Profit')
+    # axs[0,i].set_xlabel('Time (s)')
+    axs[0,i].set_ylim([20000, 220000])
+    axs[0,i].legend()
+
+
+instances = [
+   'instance-jess_5000.csv',
+   'instance-jess_10000.csv',
+   'instance-jess_15000.csv',
+   ]
+
+
+
+for i in range(len(instances)):
+
+    data = read_file(filepath+instances[i])
+    data_dict = read_values(data)
+
+    x = data_dict['t']
+    bound = data_dict['bound']
+    obj = data_dict['obj']
+    gap = data_dict['gap']
+    node_count = data_dict['node_count']
+
+    axs[1,i].plot(x, bound, label='Lower Bound')
+    axs[1,i].plot(x, obj, label='Objective Value')
+    axs[1,i].set_title(f'{instances[i]}')
+    axs[1,i].set_ylabel('Profit')
+    # axs[1,i].set_xlabel('Time (s)')
+    axs[1,i].set_ylim([2500, 40000])
+    axs[1,i].legend()
+
+
+instances = [
+   'instance-jin_5000.csv',
+   'instance-jin_10000.csv',
+   'instance-jin_15000.csv',
+   ]
+
+
+
+for i in range(len(instances)):
+
+    data = read_file(filepath+instances[i])
+    data_dict = read_values(data)
+
+    x = data_dict['t']
+    bound = data_dict['bound']
+    obj = data_dict['obj']
+    gap = data_dict['gap']
+    node_count = data_dict['node_count']
+
+    axs[2,i].plot(x, bound, label='Lower Bound')
+    axs[2,i].plot(x, obj, label='Objective Value')
+    axs[2,i].set_title(f'{instances[i]}')
+    axs[2,i].set_ylabel('Profit')
+    axs[2,i].set_xlabel('Time (s)')
+    axs[2,i].set_ylim([-100, -40])
+    axs[2,i].legend()
+
+plt.show()
+
+
+
+
+
+# for i in range(len(instances)):
+
+#     data = read_file(filepath+instances[i])
+#     data_dict = read_values(data)
+
+#     x = data_dict['t']
+#     bound = data_dict['bound']
+#     obj = data_dict['obj']
+#     gap = data_dict['gap']
+#     node_count = data_dict['node_count']
+
+#     plt.plot(x, bound, label='Lower Bound')
+#     plt.plot(x, obj, label='Objective Value')
+#     plt.title(f'Profit for {instances[i]}')
+#     plt.ylabel('Profit')
+#     plt.xlabel('Time (s)')
+#     plt.ylim([0,max(obj) + 10000])
+#     plt.legend()
+#     plt.show()
 
     # time_first_bound = len(data_dict['t']) - len(data_dict['gap'])
     # x = data_dict['t'][time_first_bound:]
